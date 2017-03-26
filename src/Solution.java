@@ -1861,4 +1861,55 @@ public class Solution {
         }
         return new int[]{-1,-1};
     }
+    //Time: O(nlogn), Space: O(1)
+    public int findDuplicate_b(int[] nums) {
+        int up = nums.length - 1;
+        int down = 1;
+        int cur = 0;
+        int gtlimit = 0;
+        int ltlimit = 0;
+        int lcount = 0;
+        int rcount = 0;
+        while(true) {
+            if ((up - down) % 2 == 0) {
+                gtlimit = (up - down) / 2;
+                ltlimit = gtlimit;
+            } else {
+                ltlimit = (up - down) / 2;
+                gtlimit = ltlimit + 1;
+            }
+            cur = (up + down) / 2;
+            lcount = 0;
+            rcount = 0;
+            for (int i = 0; i < nums.length; i++) {
+                if (nums[i] < cur && nums[i] >= down && nums[i] <= up) {
+                    lcount++;
+                } else if (nums[i] > cur && nums[i] >= down && nums[i] <= up) {
+                    rcount++;
+                }
+            }
+            if (lcount > ltlimit) {
+                up = cur - 1;
+            } else if (rcount > gtlimit) {
+                down  = cur + 1;
+            } else break;
+        }
+        return cur;
+    }
+    //Time: O(n), Space: O(1)
+    public int findDuplicate(int[] nums) {
+        if (nums.length <= 0) return -1;
+        int slow = nums[0];
+        int fast = nums[nums[0]];
+        while (slow != fast) {
+            slow = nums[slow];
+            fast = nums[nums[fast]];
+        }
+        fast = 0;
+        while (slow != fast) {
+            slow = nums[slow];
+            fast = nums[fast];
+        }
+        return slow;
+    }
 }
