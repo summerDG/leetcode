@@ -1912,4 +1912,702 @@ public class Solution {
         }
         return slow;
     }
+	public static List<List<String>> findLadders(String start, String end, List<String> wordList) {
+        HashSet<String> dict = new HashSet<String>(wordList);
+        List<List<String>> res = new ArrayList<List<String>>();
+        HashMap<String, ArrayList<String>> nodeNeighbors = new HashMap<String, ArrayList<String>>();// Neighbors for every node
+        HashMap<String, Integer> distance = new HashMap<String, Integer>();// Distance of every node from the start node
+        ArrayList<String> solution = new ArrayList<String>();
+
+        dict.add(start);
+        bfs(start, end, dict, nodeNeighbors, distance);
+        dfs(start, end, dict, nodeNeighbors, distance, solution, res);
+        showPathes(res);
+        return res;
+    }
+
+    // BFS: Trace every node's distance from the start node (level by level).
+    public static void bfs(String start, String end, Set<String> dict, HashMap<String, ArrayList<String>> nodeNeighbors, HashMap<String, Integer> distance) {
+        for (String str : dict)
+            nodeNeighbors.put(str, new ArrayList<String>());
+
+        Queue<String> queue = new LinkedList<String>();
+        queue.offer(start);
+        distance.put(start, 0);
+
+        while (!queue.isEmpty()) {
+            int count = queue.size();
+            boolean foundEnd = false;
+            for (int i = 0; i < count; i++) {
+                String cur = queue.poll();
+                int curDistance = distance.get(cur);
+                ArrayList<String> neighbors = getNeighbors(cur, dict);
+
+                for (String neighbor : neighbors) {
+                    nodeNeighbors.get(cur).add(neighbor);
+                    if (!distance.containsKey(neighbor)) {// Check if visited
+                        distance.put(neighbor, curDistance + 1);
+                        if (end.equals(neighbor))// Found the shortest path
+                            foundEnd = true;
+                        else
+                            queue.offer(neighbor);
+                    }
+                }
+            }
+
+            if (foundEnd)
+                break;
+        }
+    }
+
+    // Find all next level nodes. Change one letter each round, judge whether the word is in dictionary to find all neighbors.
+    public static ArrayList<String> getNeighbors(String node, Set<String> dict) {
+        ArrayList<String> res = new ArrayList<String>();
+        char chs[] = node.toCharArray();
+
+        for (char ch ='a'; ch <= 'z'; ch++) {
+            for (int i = 0; i < chs.length; i++) {
+                if (chs[i] == ch) continue;
+                char old_ch = chs[i];
+                chs[i] = ch;
+                if (dict.contains(String.valueOf(chs))) {
+                    res.add(String.valueOf(chs));
+                }
+                chs[i] = old_ch;
+            }
+
+        }
+        return res;
+    }
+
+    // DFS: output all paths with the shortest distance.
+    public static void dfs(String cur, String end, Set<String> dict, HashMap<String, ArrayList<String>> nodeNeighbors, HashMap<String, Integer> distance, ArrayList<String> solution, List<List<String>> res) {
+        solution.add(cur);
+        if (end.equals(cur)) {
+            res.add(new ArrayList<String>(solution));
+        } else {
+            for (String next : nodeNeighbors.get(cur)) {
+                if (distance.get(next) == distance.get(cur) + 1) {
+                    dfs(next, end, dict, nodeNeighbors, distance, solution, res);
+                }
+            }
+        }
+        solution.remove(solution.size() - 1);
+    }
+    public static List<List<String>> _findLadders(String beginWord, String endWord, List<String> wordList) {
+        int e = -1;
+        int s = wordList.size();
+        boolean[] f = new boolean[s + 1];
+        for (int i = 0; i < wordList.size(); i++){
+            if (endWord.equals(wordList.get(i))) {
+                e = i;
+                break;
+            }
+        }
+        if (e == -1) return new ArrayList<List<String>>();
+        for (int i = 0; i< wordList.size(); i++){
+            if (beginWord.equals(wordList.get(i))) {
+                s = i;
+                break;
+            }
+        }
+        if (s == wordList.size()){
+            wordList.add(beginWord);
+        }
+        Graph g = new Graph(wordList);
+        List<List<Integer>> l = new ArrayList<List<Integer>>();
+        g.shortestPath(s,e,l);
+        List<List<String>> paths= new ArrayList<List<String>>();
+        for (int i = 0; i< l.size(); i++){
+            List<Integer> r= l.get(i);
+            List<String> path = new ArrayList<String>();
+            for (int j = 0; j<r.size(); j++){
+                path.add(wordList.get(r.get(j)));
+            }
+            paths.add(path);
+        }
+        showPathes(paths);
+        return paths;
+    }
+    public static void showPathes(List<List<String>> p){
+        for (int i = 0; i< p.size(); i++){
+            List<String> r= p.get(i);
+            for (int j = 0; j<r.size(); j++){
+                System.out.print(r.get(j) + ",");
+            }
+            System.out.println();
+        }
+    }
+    static class Graph{
+        private List<String> wordList;
+        private List<List<Integer>> matrix;
+        public Graph(List<String> w){
+            long x = System.currentTimeMillis();
+            wordList = w;
+            matrix = new ArrayList<>();
+            for (int i = 0; i < w.size(); i++) {
+                List<Integer> line = new ArrayList<>();
+                matrix.add(line);
+            }
+            for (int i = 0; i < w.size(); i++) {
+                for(int j = i + 1; j < w.size(); j++){
+                    if (adj(w.get(i), w.get(j))) {
+                        matrix.get(i).add(j);
+                        matrix.get(j).add(i);
+                    }
+                }
+            }
+            long y = System.currentTimeMillis();
+            System.out.println("timeout is:"+(y - x));
+        }
+//        private void append(List<List<Integer>> list, Map<Integer, List<Integer>> map, boolean[] f) {
+//            int len  = list.size();
+//            int count = 0;
+//            while(len > 0){
+//                List<Integer> row = list.remove(0);
+//                int lastId = row.get(row.size() - 1);
+//                map.remove(lastId);
+//                len--;
+//                List<Integer> a = matrix.get(lastId);
+//                for (int id = 0; id < a.size(); id++){
+//                    int j = a.get(id);
+//                    if (!f[j]) {
+//                        List<Integer> ids = new ArrayList<>();
+//                        ids.addAll(row);
+//                        ids.add(j);
+//                        list.add(ids);
+//                        if(map.containsKey(j)) {
+//                            map.get(j).add(count++);
+//                        } else {
+//                            List<Integer> v = new ArrayList<>();
+//                            v.add(count++);
+//                            map.put(j, v);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        private void connectList(List<Integer> hlastIds, List<Integer> tFirstIds,
+//                                 List<List<Integer>> head, List<List<Integer>> tail, List<List<Integer>> list) {
+//            for (int i = 0; i< hlastIds.size(); i++){
+//                for(int j =0; j< tFirstIds.size(); j++) {
+//                    List<Integer> h = new ArrayList(head.get(hlastIds.get(i)));
+//                    List<Integer> r = new ArrayList<>(tail.get(tFirstIds.get(j)));
+//                    r.remove(r.size() - 1);
+//                    Collections.reverse(r);
+//                    h.addAll(r);
+//                    list.add(h);
+//                }
+//            }
+//        }
+//        public void shortestPath(int s, int e, List<List<Integer>> l) {
+//            boolean[] f1 = new boolean[wordList.size()];
+//            boolean[] f2 = new boolean[wordList.size()];
+//            List<Integer> hr = new ArrayList<>();
+//            List<Integer> lr = new ArrayList<>();
+//            List<List<Integer>> head = new ArrayList<>();
+//            List<List<Integer>> tail = new ArrayList<>();
+//            Map<Integer, List<Integer>> headLastIds = new HashMap<>();
+//            Map<Integer, List<Integer>> tailFirstIds = new HashMap<>();
+//            hr.add(s);
+//            List<Integer> v1 = new ArrayList<>();
+//            v1.add(0);
+//            headLastIds.put(s,v1);
+//            head.add(hr);
+//            lr.add(e);
+//            List<Integer> v2 = new ArrayList<>();
+//            v2.add(0);
+//            tailFirstIds.put(e,v2);
+//            tail.add(lr);
+//            f1[s] = true;
+//            f2[e] = true;
+//            Set<Integer> interSet = null;
+//            while(head.size()>0 && tail.size()>0) {
+//                append(head, headLastIds, f1);
+//
+//                interSet = new HashSet<>();
+//                interSet.addAll(headLastIds.keySet());
+//                interSet.retainAll(tailFirstIds.keySet());
+//                if (!interSet.isEmpty()) {
+//                    break;
+//                }
+//
+//                append(tail, tailFirstIds, f2);
+//
+//                interSet = new HashSet<>();
+//                interSet.addAll(headLastIds.keySet());
+//                interSet.retainAll(tailFirstIds.keySet());
+//                if (!interSet.isEmpty()) {
+//                    break;
+//                }
+//
+//                for (int i = 0; i< head.size(); i++){
+//                    List<Integer> c= head.get(i);
+//                    f1[c.get(c.size() - 1)] = true;
+//                }
+//                for (int i = 0; i< tail.size(); i++){
+//                    List<Integer> c= tail.get(i);
+//                    f2[c.get(c.size() - 1)] = true;
+//                }
+//            }
+//            if (head.size()>0 && tail.size()>0) {
+//                Iterator<Integer> itr = interSet.iterator();
+//                while(itr.hasNext()) {
+//                    Integer id = itr.next();
+//                    List<Integer> hLastIds = headLastIds.get(id);
+//                    List<Integer> tFirstIds = tailFirstIds.get(id);
+//                    connectList(hLastIds, tFirstIds, head, tail, l);
+//                }
+//            }
+//        }
+        public void shortestPath(int s, int e, List<List<Integer>> l) {
+            boolean[] f = new boolean[wordList.size()];
+            List<Integer> r = new ArrayList<>();
+            r.add(s);
+            l.add(r);
+            f[s] = true;
+            boolean next = true;
+            while(next && l.size()>0) {
+                int len  = l.size();
+                while(len > 0){
+                    List<Integer> row = l.remove(0);
+                    int lastId = row.get(row.size() - 1);
+                    len--;
+                    List<Integer> a = matrix.get(lastId);
+                    for (int id = 0; id < a.size(); id++){
+                        int j = a.get(id);
+                        if (!f[j]) {
+                            List<Integer> ids = new ArrayList<>();
+                            ids.addAll(row);
+                            ids.add(j);
+                            l.add(ids);
+                            if (j == e) next = false;
+                        }
+                    }
+                }
+                for (int i = 0; i< l.size(); i++){
+                    List<Integer> c= l.get(i);
+                    f[c.get(c.size() - 1)] = true;
+                }
+            }
+            for (int i = 0; i< l.size();){
+                List<Integer> c= l.get(i);
+                if (c.get(c.size() - 1) != e) {
+                    l.remove(i);
+                }else i++;
+            }
+        }
+        public boolean adj(String a, String b) {
+            int c = 0;
+            for(int i = 0; i< a.length(); i++) {
+                if (a.charAt(i) != b.charAt(i)) {
+                    c ++;
+                    if (c > 1) return false;
+                }
+            }
+            if (c == 1) return true;
+            else return false;
+        }
+    }
+
+    public static void printList(List<List<Integer>> x){
+        for (int d = 0; d < x.size(); d ++) {
+            for (int w = 0; w < x.get(d).size(); w++) {
+                System.out.print(x.get(d).get(w)+ ",");
+            }
+            System.out.println();
+        }
+    }
+    public List<Integer> majorityElement(int[] nums) {
+        List<Integer> l = new ArrayList<Integer>();
+        if (nums.length == 0) return l;
+        if (nums.length == 1) {
+            l.add(nums[0]);
+            return l;
+        }
+        if (nums.length == 2) {
+            if (nums[0]==nums[1]) {
+                l.add(nums[0]);
+            } else {
+                l.add(nums[0]);
+                l.add(nums[1]);
+            }
+            return l;
+        }
+        Arrays.sort(nums);
+        int p = nums.length / 3;
+        int first = p - 1;
+        int second = 2 * p - 1;
+        int third = 3 * p - 1;
+        int odds = nums.length - 3 * p;
+        int n = 0;
+        for (int i = 0; i <= second; i++) {
+            if (nums[i] == nums[first]) {
+                n++;
+                if (n > p) {
+                    l.add(nums[first]);
+                    break;
+                }
+            }
+        }
+        n = 0;
+        for (int i = first + 1; nums[first] != nums[second] && i <= third; i++) {
+            if (nums[i] == nums[second]) {
+                n++;
+                if (n > p) {
+                    l.add(nums[second]);
+                    break;
+                }
+            }
+        }
+        n = 0;
+        for (int i = second + 1; nums[second] != nums[third] && i < nums.length; i++) {
+            if (nums[i] == nums[third]) {
+                n++;
+                if (n > p) {
+                    l.add(nums[third]);
+                    break;
+                }
+            }
+        }
+        if (p == 1 && odds == 2) {
+            if (nums[nums.length - 1] > nums[third] && nums[nums.length - 1] == nums[nums.length - 2]) {
+                l.add(nums[nums.length - 1]);
+            }
+        }
+        return l;
+    }
+    public List<Integer> majorityElement_best(int[] nums) {
+        List<Integer> l = new ArrayList<Integer>();
+        int x=l.get(1) + 1;
+        if (nums.length == 0) return l;
+        if (nums.length == 1) {
+            l.add(nums[0]);
+            return l;
+        }
+        if (nums.length == 2) {
+            if (nums[0]==nums[1]) {
+                l.add(nums[0]);
+            } else {
+                l.add(nums[0]);
+                l.add(nums[1]);
+            }
+            return l;
+        }
+        int count1=0,count2=0,c1=0,c2=0;
+        for (int i = 0; i< nums.length; i++) {
+            if (nums[i] == c1) count1++;
+            else if (nums[i] == c2) count2++;
+            else if (count1 == 0) {
+                c1 = nums[i];
+                count1 = 1;
+            }
+            else if (count2 == 0) {
+                c2 = nums[i];
+                count2 = 1;
+            } else {
+                count1--;
+                count2--;
+            }
+        }
+        count1 = 0;
+        count2 = 0;
+        for (int i = 0; i< nums.length; i++) {
+            if (nums[i] == c1) count1++;
+            if (nums[i] == c2) count2++;
+        }
+        if (count1 > nums.length/3) l.add(c1);
+        if (c1 != c2 && count2 > nums.length/3) l.add(c2);
+        return l;
+    }
+
+    public static List<List<Integer>> combinationSum3_(int k, int n) {
+        List<List<Integer>> list = new ArrayList<List<Integer>>();
+        if (k == 1) {
+            if (n >=1 && n <= 9) {
+                List<Integer> s = new ArrayList<Integer>();
+                s.add(n);
+                list.add(s);
+            }
+            return list;
+        }
+        int sum = (1 + k) * k / 2;
+        if (n >= sum) {
+            if (n == sum) {
+                List<Integer> s = new ArrayList<Integer>();
+                for (int i = 1; i<=k; i++) {
+                    s.add(i);
+                }
+                list.add(s);
+            } else {
+                int d = n - sum;
+//                if (d + k <= 9) {
+                    for (int i = 1; i<= k; i++) {
+                        List<List<Integer>> sub = combinationSum2(i, d);
+                        int remain = k - i;
+                        for (int j = 0; j < sub.size(); j++) {
+                            List<Integer> head = initList(remain);
+                            int start = k - sub.get(j).size() + 1;
+                            for (int w = 0; w < sub.get(j).size(); w++){
+                                int value = sub.get(j).get(w) + start;
+                                if (value <= 9) {
+                                    head.add(sub.get(j).get(w) + start);
+                                    start++;
+                                }else break;
+                            }
+                            if (head.size() == k) list.add(head);
+                        }
+                    }
+//                }
+            }
+        }
+        return list;
+    }
+    public static List<List<Integer>> combinationSum2(int k, int n) {
+        List<List<Integer>> list = new ArrayList<List<Integer>>();
+        int sum = k;
+        if (n >= sum) {
+            if (n == sum) {
+                List<Integer> s = new ArrayList<Integer>();
+                for (int i = 1; i<=k; i++) {
+                    s.add(1);
+                }
+                list.add(s);
+            } else {
+                int d = n - sum;
+                for (int i = 1; i<= k; i++) {
+                    List<List<Integer>> sub = combinationSum2(i, d);
+                    int remain = k - i;
+                    for (int j = 0; j < sub.size(); j++) {
+                        List<Integer> head = initList1(remain);
+                        for (int w = 0; w < sub.get(j).size(); w++){
+                            head.add(sub.get(j).get(w) + 1);
+                        }
+                        list.add(head);
+                    }
+
+                }
+            }
+        }
+        return list;
+    }
+    public static List<Integer> initList1(int k){
+        List<Integer> s = new ArrayList<Integer>();
+        for (int p = 0; p < k; p++) {
+            s.add(1);
+        }
+        return s;
+    }
+    public static List<Integer> initList(int k){
+        List<Integer> s = new ArrayList<Integer>();
+        for (int p = 0; p < k; p++) {
+            s.add(p + 1);
+        }
+        return s;
+    }
+
+    public List<List<Integer>> combinationSum3(int k, int n) {
+        List<List<Integer>> ans = new ArrayList<>();
+        combination(ans, new ArrayList<Integer>(), k, 1, n);
+        return ans;
+    }
+
+    private void combination(List<List<Integer>> ans, List<Integer> comb, int k,  int start, int n) {
+        if (comb.size() == k && n == 0) {
+            List<Integer> li = new ArrayList<Integer>(comb);
+            ans.add(li);
+            return;
+        }
+        for (int i = start; i <= 9; i++) {
+            comb.add(i);
+            combination(ans, comb, k, i+1, n-i);
+            comb.remove(comb.size() - 1);
+        }
+    }
+    public int minSubArrayLen(int s, int[] nums) {
+        int min = nums.length + 1;
+        int start = 0;
+        int end  = 0;
+        int x = s;
+        while (end < nums.length && start <= end) {
+            boolean b = true;
+            for (int i = end; i < nums.length; i++) {
+                x -= nums[i];
+                if (x <= 0) {
+                    end = i;
+                    b = false;
+                    break;
+                }
+            }
+            if (b) break;
+
+            for (int i = start; i <= end; i++) {
+                x += nums[i];
+                if (x > 0) {
+                    start = i;
+                    break;
+                }
+            }
+            int l = end - start + 1;
+            if (l < min) min = l;
+            start ++;
+            end ++;
+        }
+        if (min == nums.length + 1) min = 0;
+        return min;
+    }
+    public void rotate(int[] nums, int k) {
+        if (nums.length == 0 || nums.length == k || k == 0) return;
+        k = k % nums.length;
+        reverse(nums, 0, nums.length - 1);
+        reverse(nums, 0, k - 1);
+        reverse(nums, k, nums.length - 1);
+    }
+    private void reverse(int[] nums, int s, int e) {
+        int t = 0;
+        while(s < e) {
+            t = nums[e];
+            nums[e] = nums[s];
+            nums[s] = t;
+            s++;
+            e--;
+        }
+    }
+    public int[] twoSum(int[] numbers, int target) {
+        if (target <= 0) {
+            int start = 0;
+            for (start = 0; start < numbers.length; start++) {
+                if (numbers[start] <= target) break;
+            }
+            int d = target - numbers[start];
+            int end = 0;
+            for (end = numbers.length - 1; start < end;) {
+                if (numbers[end] == d) break;
+                if (numbers[end] < d) {
+                    start ++;
+                    d = target - numbers[start];
+                } else end--;
+            }
+            return new int[]{start + 1, end + 1};
+        }
+        int end = 0;
+        for (end = numbers.length - 1; end >= 0; end--) {
+            if (numbers[end] <= target) break;
+        }
+        int d = target - numbers[end];
+        int start = 0;
+        for (start = 0; start < end;) {
+            if (numbers[start] == d) break;
+            if (numbers[start] > d) {
+                end --;
+                d = target - numbers[end];
+            } else start++;
+        }
+        return new int[]{start + 1, end + 1};
+    }
+    public int maxProduct(int[] nums) {
+        if (nums.length == 1) return nums[0];
+        int max = 1;
+        boolean f = true;
+        boolean b = true;
+        int s = 0;
+        int e = 1;
+        int first = 0;
+        int last = 0;
+        int l = 0;
+        for (int i = 0; i< nums.length; i++) {
+            if (nums[i] != 0) {
+                s = i;
+                e = s + 1;
+                break;
+            }
+        }
+        first = s;
+        last = s;
+        if (s < nums.length && nums[s] < 0) {
+            l++;
+        }
+        while (s < e && e <= nums.length) {
+            if (e == nums.length || nums[e] == 0) {
+                if (e < nums.length && nums[e] == 0) b = false;
+                if (f) {
+                    max = maxP(nums,s,e,l,first,last);
+                    f = false;
+                } else {
+                    int x = maxP(nums,s,e,l,first,last);
+                    if (x > max) max = x;
+                }
+                l = 0;
+                for (int i = e; i< nums.length; i++) {
+                    if (nums[i] != 0) {
+                        s = i;
+                        e = s;
+                        break;
+                    }
+                }
+                first = s;
+                last = s;
+                if (s < nums.length && nums[s] < 0) {
+                    l++;
+                }
+            } else if (nums[e] < 0) {
+                l++;
+                if (l == 1) {
+                    first = e;
+                    last = e;
+                }
+                else last = e;
+            }
+            e++;
+        }
+        if (!b && max < 0) return 0;
+        else return max;
+    }
+    private int maxP(int[] nums, int s, int e, int l, int first, int last) {
+        int max = 1;
+        boolean f = true;
+        boolean b = false;
+        if (l % 2 == 0) {
+            for (int i = s; i < e; i++) {
+                max *= nums[i];
+                f = false;
+            }
+        } else {
+            int x = 1;
+            for (int i = first + 1; i < e; i++) {
+                x *= nums[i];
+                b = true;
+            }
+            if (b && (f || x > max)) {
+                max = x;
+                f = false;
+            }
+            x = nums[s];
+            for (int i = s + 1; i < first; i++) {
+                x *= nums[i];
+            }
+            if (f || x > max) {
+                max = x;
+                f = false;
+            }
+            x = nums[s];
+            for (int i = s + 1; i < last; i++) {
+                x *= nums[i];
+            }
+            if (f || x > max) {
+                max = x;
+                f = false;
+            }
+            x = 1;
+            for (int i = last + 1; i < e; i++) {
+                x *= nums[i];
+                b = true;
+            }
+            if (last + 1 < e && (f || (x > max && b))) {
+                max = x;
+                f = false;
+            }
+        }
+        return max;
+    }
 }
